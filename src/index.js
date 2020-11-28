@@ -9,8 +9,18 @@ app.use(express.static(publicPath));
 
 const server = http.createServer(app);
 const ioServer = socketio(server);
-ioServer.on('connection', () => {
+
+let counter = 0;
+
+ioServer.on('connection', (socket) => {
   console.log('handling connection');
+
+  socket.emit('countupdate', counter);
+
+  socket.on('increment', () => {
+    counter++;
+    ioServer.emit('countupdate', counter);
+  });
 });
 
 const port = process.env.PORT || 3000;
