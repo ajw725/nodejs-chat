@@ -18,6 +18,11 @@ ioServer.on('connection', (socket) => {
     ioServer.emit('message', msg);
   });
 
+  socket.on('sendlocation', (coords) => {
+    const url = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
+    ioServer.emit('message', `Location: ${url}`);
+  });
+
   socket.on('disconnect', () => {
     ioServer.emit('message', 'A user has left the chat.');
   });
