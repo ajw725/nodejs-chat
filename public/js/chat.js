@@ -1,46 +1,57 @@
 const socket = io();
 
-const messageList = document.getElementById('messageList');
+// elements
+const $messageList = document.getElementById('messageList');
+const $form = document.getElementById('chatForm');
+const $messageInput = document.getElementById('chatInput');
+const $sendBtn = document.getElementById('sendBtn');
+const $locationBtn = document.getElementById('shareLocation');
 
-socket.on('message', (msg) => {
-  const newItem = document.createElement('li');
-  newItem.textContent = msg;
-  messageList.appendChild(newItem);
+// templates
+const $messageTemplate = document.getElementById('messageTemplate').innerHTML;
+
+socket.on('message', (message) => {
+  const html = Mustache.render($messageTemplate, { message });
+  $messageList.insertAdjacentHTML('beforeend', html);
 });
 
 socket.on('newuser', (msg) => {
   console.log(msg);
 });
 
-const form = document.getElementById('chatForm');
-const input = document.getElementById('chatInput');
-
-form.addEventListener('submit', (e) => {
+$form.addEventListener('submit', (e) => {
   e.preventDefault();
-  const msg = input.value;
+  $sendBtn.setAttribute('disabled', 'disabled');
+
+  const msg = $messageInput.value;
   socket.emit('sendmessage', msg, (res, err) => {
+    $sendBtn.removeAttribute('disabled');
+    $messageInput.value = '';
+
     if (err) {
       console.error(err);
     } else {
       console.log(res);
     }
   });
-  input.value = '';
 });
 
-const locationBtn = document.getElementById('shareLocation');
-locationBtn.addEventListener('click', () => {
+$locationBtn.addEventListener('click', () => {
   const locationSvc = navigator.geolocation;
   if (!locationSvc) {
     return alert('Geolocation is not supported in this browser.');
   }
 
-  const loc = locationSvc.getCurrentPosition(
+  $locationBtn.setAttribute('disabled', 'disabled');
+
+  locationSvc.getCurrentPosition(
     (data) => {
       const { latitude, longitude } = data.coords;
       const shortLat = Math.round(100 * latitude) / 100;
       const shortLng = Math.round(100 * longitude) / 100;
+
       socket.emit('sendlocation', { lat: shortLat, lng: shortLng }, () => {
+        $locationBtn.removeAttribute('disabled');
         console.log('location shared');
       });
     },
