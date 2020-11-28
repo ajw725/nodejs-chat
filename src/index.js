@@ -12,10 +12,14 @@ const ioServer = socketio(server);
 
 ioServer.on('connection', (socket) => {
   socket.emit('message', 'Welcome to the chat!');
-  socket.broadcast.emit('newuser', 'A new user has joined the chat!');
+  socket.broadcast.emit('message', 'A new user has joined the chat!');
 
   socket.on('sendmessage', (msg) => {
     ioServer.emit('message', msg);
+  });
+
+  socket.on('disconnect', () => {
+    ioServer.emit('message', 'A user has left the chat.');
   });
 });
 
