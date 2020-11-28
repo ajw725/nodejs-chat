@@ -11,11 +11,9 @@ const server = http.createServer(app);
 const ioServer = socketio(server);
 
 ioServer.on('connection', (socket) => {
-  console.log('handling connection');
-
   socket.emit('message', 'Welcome to the chat!');
 
-  socket.on('message', (msg) => {
+  socket.on('sendMessage', (msg) => {
     ioServer.emit('message', msg);
   });
 });

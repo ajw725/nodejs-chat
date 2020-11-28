@@ -14,6 +14,6 @@ const input = document.getElementById('chatInput');
 form.addEventListener('submit', (e) => {
   e.preventDefault();
   const msg = input.value;
-  socket.emit('message', msg);
+  socket.emit('sendMessage', msg);
   input.value = '';
 });
