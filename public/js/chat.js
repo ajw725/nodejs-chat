@@ -9,9 +9,15 @@ const $locationBtn = document.getElementById('shareLocation');
 
 // templates
 const $messageTemplate = document.getElementById('messageTemplate').innerHTML;
+const $locationTemplate = document.getElementById('locationTemplate').innerHTML;
 
 socket.on('message', (message) => {
   const html = Mustache.render($messageTemplate, { message });
+  $messageList.insertAdjacentHTML('beforeend', html);
+});
+
+socket.on('locationmessage', (url) => {
+  const html = Mustache.render($locationTemplate, { url });
   $messageList.insertAdjacentHTML('beforeend', html);
 });
 

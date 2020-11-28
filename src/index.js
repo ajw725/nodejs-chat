@@ -27,7 +27,7 @@ ioServer.on('connection', (socket) => {
 
   socket.on('sendlocation', (coords, cb) => {
     const url = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
-    ioServer.emit('message', `Location: ${url}`);
+    ioServer.emit('locationmessage', url);
     cb();
   });
 
