@@ -8,12 +8,16 @@ socket.on('message', (msg) => {
   messageList.appendChild(newItem);
 });
 
+socket.on('newuser', (msg) => {
+  console.log(msg);
+});
+
 const form = document.getElementById('chatForm');
 const input = document.getElementById('chatInput');
 
 form.addEventListener('submit', (e) => {
   e.preventDefault();
   const msg = input.value;
-  socket.emit('sendMessage', msg);
+  socket.emit('sendmessage', msg);
   input.value = '';
 });
