@@ -10,16 +10,13 @@ app.use(express.static(publicPath));
 const server = http.createServer(app);
 const ioServer = socketio(server);
 
-let counter = 0;
-
 ioServer.on('connection', (socket) => {
   console.log('handling connection');
 
-  socket.emit('countupdate', counter);
+  socket.emit('message', 'Welcome to the chat!');
 
-  socket.on('increment', () => {
-    counter++;
-    ioServer.emit('countupdate', counter);
+  socket.on('message', (msg) => {
+    ioServer.emit('message', msg);
   });
 });
 

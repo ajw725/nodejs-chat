@@ -1,9 +1,19 @@
 const socket = io();
 
-socket.on('countupdate', (count) => {
-  console.log('count:', count);
+const messageList = document.getElementById('messageList');
+
+socket.on('message', (msg) => {
+  const newItem = document.createElement('li');
+  newItem.textContent = msg;
+  messageList.appendChild(newItem);
 });
 
-document.getElementById('increment').addEventListener('click', () => {
-  socket.emit('increment');
+const form = document.getElementById('chatForm');
+const input = document.getElementById('chatInput');
+
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const msg = input.value;
+  socket.emit('message', msg);
+  input.value = '';
 });
