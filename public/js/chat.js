@@ -18,7 +18,13 @@ const input = document.getElementById('chatInput');
 form.addEventListener('submit', (e) => {
   e.preventDefault();
   const msg = input.value;
-  socket.emit('sendmessage', msg);
+  socket.emit('sendmessage', msg, (res, err) => {
+    if (err) {
+      console.error(err);
+    } else {
+      console.log(res);
+    }
+  });
   input.value = '';
 });
 
@@ -34,7 +40,9 @@ locationBtn.addEventListener('click', () => {
       const { latitude, longitude } = data.coords;
       const shortLat = Math.round(100 * latitude) / 100;
       const shortLng = Math.round(100 * longitude) / 100;
-      socket.emit('sendlocation', { lat: shortLat, lng: shortLng });
+      socket.emit('sendlocation', { lat: shortLat, lng: shortLng }, () => {
+        console.log('location shared');
+      });
     },
     (err) => {
       console.error('Failed to retrieve location:', err);
