@@ -20,21 +20,26 @@ const io = socketio(server);
 
 io.on('connection', (socket) => {
   socket.on('join', ({ username, room }, cb) => {
-    socket.join(room);
     const { user, error } = addUser({ id: socket.id, username, room });
 
     if (error) {
       return cb(undefined, 'Username already taken');
     }
 
+    socket.join(user.room);
     socket.emit('message', buildMessage('Welcome to the chat!', 'Admin'));
 
     socket.broadcast
-      .to(room)
+      .to(user.room)
       .emit(
         'message',
         buildMessage(`${username} has joined the chat`, 'Admin')
       );
+
+    io.to(user.room).emit('roomdata', {
+      room: user.room,
+      users: getUsersInRoom(user.room),
+    });
 
     cb();
   });
@@ -68,7 +73,7 @@ io.on('connection', (socket) => {
     cb();
   });
 
-  socket.on('disconnect', (cb) => {
+  socket.on('disconnect', () => {
     const user = getUser(socket.id);
     if (!user) {
       return;
@@ -79,6 +84,11 @@ io.on('connection', (socket) => {
     socket.broadcast
       .to(room)
       .emit('message', buildMessage(`${username} has left the chat`, 'Admin'));
+
+    io.to(room).emit('roomdata', {
+      room,
+      users: getUsersInRoom(room),
+    });
   });
 });
 
