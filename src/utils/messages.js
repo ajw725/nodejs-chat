@@ -1,5 +1,6 @@
-const buildMessage = (text) => ({
+const buildMessage = (text, username) => ({
   text,
+  username,
   timestamp: new Date().getTime(),
 });
 

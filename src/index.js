@@ -4,20 +4,40 @@ const path = require('path');
 const socketio = require('socket.io');
 const Filter = require('bad-words');
 const { buildMessage } = require('./utils/messages');
+const {
+  addUser,
+  removeUser,
+  getUser,
+  getUsersInRoom,
+} = require('./utils/users');
 
 const app = express();
 const publicPath = path.join(__dirname, '../public');
 app.use(express.static(publicPath));
 
 const server = http.createServer(app);
-const ioServer = socketio(server);
+const io = socketio(server);
 
-ioServer.on('connection', (socket) => {
-  socket.emit('message', buildMessage('Welcome to the chat!'));
-  socket.broadcast.emit(
-    'message',
-    buildMessage('A new user has joined the chat!')
-  );
+io.on('connection', (socket) => {
+  socket.on('join', ({ username, room }, cb) => {
+    socket.join(room);
+    const { user, error } = addUser({ id: socket.id, username, room });
+
+    if (error) {
+      return cb(undefined, 'Username already taken');
+    }
+
+    socket.emit('message', buildMessage('Welcome to the chat!', 'Admin'));
+
+    socket.broadcast
+      .to(room)
+      .emit(
+        'message',
+        buildMessage(`${username} has joined the chat`, 'Admin')
+      );
+
+    cb();
+  });
 
   socket.on('sendmessage', (msg, cb) => {
     const filter = new Filter();
@@ -25,18 +45,40 @@ ioServer.on('connection', (socket) => {
       return cb(null, 'Profanity is not allowed!');
     }
 
-    ioServer.emit('message', buildMessage(msg));
+    const user = getUser(socket.id);
+    if (!user) {
+      return cb(undefined, 'User not found');
+    }
+
+    const { username, room } = user;
+    io.to(room).emit('message', buildMessage(msg, username));
     cb('Message delivered');
   });
 
-  socket.on('sendlocation', (coords, cb) => {
-    const url = `https://www.google.com/maps?q=${coords.lat},${coords.lng}`;
-    ioServer.emit('locationmessage', buildMessage(url));
+  socket.on('sendlocation', ({ lat, lng }, cb) => {
+    const url = `https://www.google.com/maps?q=${lat},${lng}`;
+
+    const user = getUser(socket.id);
+    if (!user) {
+      return cb(undefined, 'User not found');
+    }
+
+    const { username, room } = user;
+    io.to(room).emit('locationmessage', buildMessage(url, username));
     cb();
   });
 
-  socket.on('disconnect', () => {
-    ioServer.emit('message', buildMessage('A user has left the chat.'));
+  socket.on('disconnect', (cb) => {
+    const user = getUser(socket.id);
+    if (!user) {
+      return;
+    }
+
+    const { username, room } = user;
+    removeUser(socket.id);
+    socket.broadcast
+      .to(room)
+      .emit('message', buildMessage(`${username} has left the chat`, 'Admin'));
   });
 });
 

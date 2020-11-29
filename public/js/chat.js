@@ -11,32 +11,34 @@ const $locationBtn = document.getElementById('shareLocation');
 const $messageTemplate = document.getElementById('messageTemplate').innerHTML;
 const $locationTemplate = document.getElementById('locationTemplate').innerHTML;
 
-socket.on('message', ({ text, timestamp }) => {
+// options
+const { username, room } = Qs.parse(location.search, {
+  ignoreQueryPrefix: true,
+});
+
+socket.on('message', ({ text, username, timestamp }) => {
   const html = Mustache.render($messageTemplate, {
     message: text,
+    username,
     timestamp: moment(timestamp).format('HH:mm:ss'),
   });
   $messageList.insertAdjacentHTML('beforeend', html);
 });
 
-socket.on('locationmessage', ({ text, timestamp }) => {
+socket.on('locationmessage', ({ text, username, timestamp }) => {
   const html = Mustache.render($locationTemplate, {
     url: text,
+    username,
     timestamp: moment(timestamp).format('HH:mm:ss'),
   });
   $messageList.insertAdjacentHTML('beforeend', html);
-});
-
-socket.on('newuser', (msg) => {
-  console.log(msg);
 });
 
 $form.addEventListener('submit', (e) => {
   e.preventDefault();
   $sendBtn.setAttribute('disabled', 'disabled');
 
-  const msg = $messageInput.value;
-  socket.emit('sendmessage', msg, (res, err) => {
+  socket.emit('sendmessage', $messageInput.value, (res, err) => {
     $sendBtn.removeAttribute('disabled');
     $messageInput.value = '';
 
@@ -71,4 +73,13 @@ $locationBtn.addEventListener('click', () => {
       console.error('Failed to retrieve location:', err);
     }
   );
+});
+
+socket.emit('join', { username, room }, (_res, err) => {
+  if (err) {
+    alert(err);
+    location.href = '/';
+  } else {
+    console.log(`Joined ${room}.`);
+  }
 });
